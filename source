@@ -1,0 +1,63 @@
+local NormalHeight = 10.6215
+--
+if shared.TDE then
+    for _, Connection in next, shared.TDE do
+        Connection:Disconnect()
+    end
+end
+shared.TDE = {}
+--
+local RenderStepped = game:GetService("RunService").RenderStepped
+
+local MessageRequest = game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest
+local function Message(z, x)
+    MessageRequest:FireServer(z, x or "All")
+end
+
+local function OnCharacterAdded(Character)
+    if not shared.TDE[Character] then
+        local Humanoid = Character:WaitForChild("Humanoid")
+        local ActualHeight = Character:WaitForChild("HeightValue"):WaitForChild("ActualHeight").Value
+        local HRP = Humanoid.RootPart
+        local CharName = Character.Name
+
+        if ActualHeight >= 10 then 
+            print(Character)
+            local JumpSignal; JumpSignal = Humanoid.Jumping:Connect(function()
+                local StartTime = tick()
+                local StartY = HRP.Position.Y
+
+                local CurrentY = StartY
+                local CurrentTime = StartTime
+                
+                while HRP.AssemblyLinearVelocity.Y > 0 do
+                    local lY = HRP.Position.Y
+                    if lY > CurrentY then
+                        CurrentY = lY
+                        CurrentTime = tick()
+                    end
+
+                    RenderStepped:Wait()
+                end
+
+                local EndY, EndTime = CurrentY - StartY, CurrentTime - StartTime
+                --print("Jump height "..CharName.." : "..EndY)
+                if EndY > NormalHeight then
+                    --Message(CharName.." teched")
+                    warn(EndY - NormalHeight,"Jump height "..CharName.." : "..EndY.." Normal: "..NormalHeight)
+                end
+            end)
+            shared.TDE[Character] = JumpSignal
+        end
+    end
+end
+
+for _, Player in ipairs(game.Players:GetPlayers()) do
+    OnCharacterAdded(Player.Character or Player.CharacterAdded:Wait())
+end
+local PlayerSignal; PlayerSignal = game.Players.PlayerAdded:Connect(function(Player)
+    Player.CharacterAdded:Connect(OnCharacterAdded)
+end)
+table.insert(shared.TDE, PlayerSignal)
+--
+warn("Executed")
