@@ -1,6 +1,0 @@
-local args = {
-    [1]="Right",
-    [2]="F\255"
-   }
-
-game:GetService("ReplicatedStorage"):WaitForChild("rerolls"):WaitForChild("KeybindChange"):FireServer(unpack(args))
